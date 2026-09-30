@@ -5,6 +5,16 @@ namespace Laraue.Interpreter.Markdown.UnitTests;
 
 public class MarkdownTranspilerTests
 {
+    [Theory]
+    [InlineData("- Fix now")]
+    [InlineData("  Fix now")]
+    public void GetTree_ShouldReturnContentBlocks_WhenFirstLineStartsWithListMarkerOrSpace(string markdown)
+    {
+        var tree = new MarkdownTranspiler().GetTree(markdown).Tree;
+
+        Assert.NotEmpty(tree.ContentBlocks);
+    }
+
     private static readonly string NewLine = Environment.NewLine;
     
     const string TranspiledExcepted = @"<h1>

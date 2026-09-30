@@ -15,8 +15,13 @@ public class MarkdownMetaTokenScanner(string input)
     {
         switch (nextChar)
         {
-            case ' ':
+            case ' ' when _metaStarted && !_metaFinished:
                 AddToken(MarkdownMetaTokenType.WhiteSpace);
+                return true;
+            case ' ':
+                // Outside of the meta section a space is the start of the content (indentation),
+                // not a separator between meta tokens.
+                ReadContent();
                 return true;
             default:
                 HandleNonWhitespaceChar(nextChar);
@@ -26,8 +31,8 @@ public class MarkdownMetaTokenScanner(string input)
 
     private void HandleNonWhitespaceChar(char nextChar)
     {
-        // Try read metadata
-        if (nextChar == '-')
+        // Try read metadata. Once the meta is finished '-' is a part of the content (a list, a rule).
+        if (nextChar == '-' && !_metaFinished)
         {
             ReadMetaDelimiter();
             return;
@@ -80,7 +85,14 @@ public class MarkdownMetaTokenScanner(string input)
                 _metaFinished = true;
             return;
         }
-        
+
+        // A single '-' or '--' before any meta is the beginning of the content, e.g. a list item.
+        if (!_metaStarted)
+        {
+            ReadContent();
+            return;
+        }
+
         AddWordOrNumber();
     }
 
