@@ -124,6 +124,35 @@ project: project1
             "project1");
     }
 
+    [Theory]
+    [InlineData("- Fix now")]
+    [InlineData("- a\n- b")]
+    [InlineData("-- not a delimiter")]
+    [InlineData("  indented text")]
+    [InlineData("\n\n- Fix now")]
+    public void MarkdownMetaTokenParser_ShouldReturnWholeTextAsContent_WhenMetaIsMissing(string markdownFile)
+    {
+        var parseResult = Parse(markdownFile);
+
+        Assert.Empty(parseResult.Headers);
+        Assert.Equal(markdownFile.TrimStart('\n'), parseResult.Content);
+    }
+
+    [Fact]
+    public void MarkdownMetaTokenParser_ShouldKeepListAsContent_WhenMetaIsFollowedByList()
+    {
+        const string markdownFile = @"---
+project: project1
+---
+- a
+- b";
+
+        var parseResult = Parse(markdownFile);
+
+        Assert.Single(parseResult.Headers);
+        Assert.Equal("- a\n- b", parseResult.Content.Replace("\r\n", "\n"));
+    }
+
     private static MarkdownMetaTree Parse(string markdown)
     {
         var scanner = new MarkdownMetaTokenScanner(markdown);
